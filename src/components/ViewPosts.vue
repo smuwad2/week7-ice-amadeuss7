@@ -1,8 +1,5 @@
-<script setup>
-    import axios from 'axios';
-</script>
-
 <script>
+import axios from 'axios';
 export default {
     data() {
         return {
@@ -36,10 +33,30 @@ export default {
     },
     methods: {
         editPost(id) {
-            
+            // Find the post to edit
+            const post = this.posts.find(p => p.id === id);
+            if (post) {
+                this.editPostId = id;
+                this.entry = post.entry;
+                this.mood = post.mood;
+                this.showEditPost = true;
+            }
         },
-        updatePost(event) {
-            
+        async updatePost(event) {
+            event.preventDefault();
+            const postData = {
+                id: this.editPostId,
+                entry: this.entry,
+                mood: this.mood
+            };
+            await axios.post(`${this.baseUrl}/updatePost?id=${this.editPostId}`, postData);
+            this.showEditPost = false;
+            // update local posts array
+            const idx = this.posts.findIndex(p => p.id === this.editPostId);
+            if (idx !== -1) {
+                this.posts[idx].entry = this.entry;
+                this.posts[idx].mood = this.mood;
+            }
         }
     }
 }
@@ -61,7 +78,7 @@ export default {
                     <td>{{ post.id }}</td>
                     <td>{{ post.entry }}</td>
                     <td>{{ post.mood }}</td>
-                    <td><button>Edit</button></td>
+                    <td><button @click="editPost(post.id)">Edit</button></td>
                 </tr>
             </tbody>
 
@@ -70,7 +87,7 @@ export default {
         <div id="editPost" v-if="showEditPost">
             <h3>Edit Post</h3>
             <div id="postContent" class="mx-3">
-                <form>
+                <form @submit="updatePost">
                     <div class="mb-3">
                         <label for="entry" class="form-label">Entry</label>
                         <textarea id="entry" class="form-control" v-model="entry" required></textarea>
